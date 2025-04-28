@@ -53,20 +53,6 @@
         }, {});
     }
 
-    // Extraer fbclid de URL o referrer
-    function getFbclid() {
-      const params = new URLSearchParams(window.location.search);
-      let fbclid = params.get('fbclid') || '';
-      if (!fbclid && window.location.hash.includes('fbclid=')) {
-        fbclid = new URLSearchParams(window.location.hash.slice(1)).get('fbclid') || '';
-      }
-      if (!fbclid && document.referrer.includes('fbclid=')) {
-        const refQs = document.referrer.split('?')[1] || '';
-        fbclid = new URLSearchParams(refQs).get('fbclid') || '';
-      }
-      return fbclid || 'no_disponible';
-    }
-
     // Genera UUID de 16 bytes hex
     function generateUUID() {
       const bytes = new Uint8Array(16);
@@ -78,7 +64,6 @@
 
     window.addEventListener('load', () => {
       const cookies = parseCookies();
-      const fbclid  = getFbclid();
       const id      = generateUUID();
 
       const payload = {
@@ -86,7 +71,6 @@
         timestamp: new Date().toISOString(),
         _fbc:      cookies._fbc || null,
         _fbp:      cookies._fbp || null,
-        fbclid,
         id
       };
 
