@@ -101,13 +101,16 @@
         body: JSON.stringify(payload)
       })
       .then(res => res.json())
-      .then(console.log)
+      .then(data => {
+        console.log(data);
+        // BORRAR DESPUÉS: quitar este timeout de 15 segundos antes de redirigir a WhatsApp
+        setTimeout(() => {
+          const number = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
+          const texto  = `${mensajeBase} Mi código es: ${id}`;
+          window.location.href = `https://wa.me/${number}?text=${encodeURIComponent(texto)}`;
+        }, 15000); // 15 segundos
+      })
       .catch(console.error);
-
-      // Redirigir a WhatsApp
-      const number = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
-      const texto  = `${mensajeBase} Mi código es: ${id}`;
-      window.location.href = `https://wa.me/${number}?text=${encodeURIComponent(texto)}`;
     });
   </script>
 </body>
