@@ -69,30 +69,26 @@
       const payload = {
         event:     'ViewContent',
         timestamp: new Date().toISOString(),
-        _fbc:      cookies._fbc || null,
-        _fbp:      cookies._fbp || null,
+        _fbc:      cookies._fbc  || null,
+        _fbp:      cookies._fbp  || null,
         id
       };
 
-      // Envío al API (incluye cookies)
+      // Envío al API (solo en el body, NO enviamos las cookies como tal)
       fetch(API_URL, {
-        method:      'POST',
-        mode:        'cors',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
       })
       .then(res => res.json())
       .then(data => {
         console.log(data);
-        // BORRAR DESPUÉS: quitar este timeout de 15 segundos antes de redirigir a WhatsApp
+        // BORRAR DESPUÉS: espera 15s antes de redirigir a WhatsApp
         setTimeout(() => {
           const number = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
           const texto  = `${mensajeBase} Mi código es: ${id}`;
           window.location.href = `https://wa.me/${number}?text=${encodeURIComponent(texto)}`;
-        }, 15000); // 15 segundos
+        }, 15000);
       })
       .catch(console.error);
     });
