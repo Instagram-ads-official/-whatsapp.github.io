@@ -21,41 +21,44 @@
     fbq('init', PIXEL_ID);
     fbq('track', 'ViewContent');
   </script>
+  <noscript>
+    <img height="1" width="1" style="display:none"
+         src="https://www.facebook.com/tr?id=1391288831895635&ev=ViewContent&noscript=1"/>
+  </noscript>
 </head>
 <body>
   <h1>Prueba _fbc y _fbp + WhatsApp</h1>
-  <p>Revisa CloudWatch Logs para ver los valores de <code>_fbc</code> y <code>_fbp</code>,
-     y serás redirigido a WhatsApp.</p>
+  <p>Revisa CloudWatch Logs para ver los valores de <code>_fbc</code> y <code>_fbp</code>, luego serás redirigido a WhatsApp.</p>
 
   <script>
     // ENDPOINT de captura
     const API_URL = 'https://jxfyydlcu7.execute-api.us-east-2.amazonaws.com/prod/Capture_fbc';
 
-    // Lista de números de WhatsApp (personalízala)
+    // Números de WhatsApp
     const whatsappNumbers = [
       '5491171635226',
       '54911XXXXXXXX',
       '54911YYYYYYYY'
     ];
-    const mensajeBase = 'Hola, vengo por el bono de bienvenida del 200%, ¿me creas un usuario?';
+    const mensajeBase = 'NO TE PIERDAS NUESTRO BONO DE BIENVENIDA 200% EXTRA – ¡Hola, me creo un usuario!';
 
-    // Lee cookies en objeto
+    // Helper: parsear document.cookie en objeto
     function parseCookies() {
       return document.cookie
         .split('; ')
-        .reduce((obj, kv) => {
-          const [k, ...v] = kv.split('=');
-          obj[k] = v.join('=');
-          return obj;
+        .reduce((cookies, kv) => {
+          const [name, ...vals] = kv.split('=');
+          cookies[name] = vals.join('=');
+          return cookies;
         }, {});
     }
 
-    // Extrae fbclid de search, hash o referrer
+    // Extraer fbclid de URL o referrer
     function getFbclid() {
       const params = new URLSearchParams(window.location.search);
       let fbclid = params.get('fbclid') || '';
       if (!fbclid && window.location.hash.includes('fbclid=')) {
-        fbclid = new URLSearchParams(window.location.hash.substring(1)).get('fbclid') || '';
+        fbclid = new URLSearchParams(window.location.hash.slice(1)).get('fbclid') || '';
       }
       if (!fbclid && document.referrer.includes('fbclid=')) {
         const refQs = document.referrer.split('?')[1] || '';
@@ -64,7 +67,7 @@
       return fbclid || 'no_disponible';
     }
 
-    // Genera UUID sencillo de 16 bytes
+    // Genera UUID de 16 bytes hex
     function generateUUID() {
       const bytes = new Uint8Array(16);
       crypto.getRandomValues(bytes);
@@ -78,7 +81,6 @@
       const fbclid  = getFbclid();
       const id      = generateUUID();
 
-      // Construcción del payload completo
       const payload = {
         event:     'ViewContent',
         timestamp: new Date().toISOString(),
@@ -88,17 +90,21 @@
         id
       };
 
-      // Envío al API
+      // Envío al API (incluye cookies)
       fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method:      'POST',
+        mode:        'cors',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(payload)
       })
-      .then(r => r.json())
+      .then(res => res.json())
       .then(console.log)
       .catch(console.error);
 
-      // Selecciona número al azar y redirige a WhatsApp
+      // Redirigir a WhatsApp
       const number = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
       const texto  = `${mensajeBase} Mi código es: ${id}`;
       window.location.href = `https://wa.me/${number}?text=${encodeURIComponent(texto)}`;
