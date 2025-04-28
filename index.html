@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Landing FB Pixel + _fbc/_fbp + WhatsApp</title>
+
+  <!-- 1) Meta Pixel -->
+  <script>
+    const PIXEL_ID = '1391288831895635';
+    !function(f,b,e,v,n,t,s){
+      if(f.fbq) return; n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq) f._fbq=n; n.push=n; n.loaded=!0; n.version='2.0';
+      n.queue=[]; t=b.createElement(e); t.async=!0;
+      t.src=v; s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s);
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js'
+    );
+    fbq('init', PIXEL_ID);
+    fbq('track', 'ViewContent');
+  </script>
+</head>
+<body>
+  <h1>Prueba _fbc y _fbp + WhatsApp</h1>
+  <p>Revisa CloudWatch Logs para ver los valores de <code>_fbc</code> y <code>_fbp</code>,
+     y serás redirigido a WhatsApp.</p>
+
+  <script>
+    // ENDPOINT de captura
+    const API_URL = 'https://jxfyydlcu7.execute-api.us-east-2.amazonaws.com/prod/Capture_fbc';
+
+    // Lista de números de WhatsApp (personalízala)
+    const whatsappNumbers = [
+      '5491171635226',
+      '54911XXXXXXXX',
+      '54911YYYYYYYY'
+    ];
+    const mensajeBase = 'Hola, vengo por el bono de bienvenida del 200%, ¿me creas un usuario?';
+
+    // Lee cookies en objeto
+    function parseCookies() {
+      return document.cookie
+        .split('; ')
+        .reduce((obj, kv) => {
+          const [k, ...v] = kv.split('=');
+          obj[k] = v.join('=');
+          return obj;
+        }, {});
+    }
+
+    // Extrae fbclid de search, hash o referrer
+    function getFbclid() {
+      const params = new URLSearchParams(window.location.search);
+      let fbclid = params.get('fbclid') || '';
+      if (!fbclid && window.location.hash.includes('fbclid=')) {
+        fbclid = new URLSearchParams(window.location.hash.substring(1)).get('fbclid') || '';
+      }
+      if (!fbclid && document.referrer.includes('fbclid=')) {
+        const refQs = document.referrer.split('?')[1] || '';
+        fbclid = new URLSearchParams(refQs).get('fbclid') || '';
+      }
+      return fbclid || 'no_disponible';
+    }
+
+    // Genera UUID sencillo de 16 bytes
+    function generateUUID() {
+      const bytes = new Uint8Array(16);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes)
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    window.addEventListener('load', () => {
+      const cookies = parseCookies();
+      const fbclid  = getFbclid();
+      const id      = generateUUID();
+
+      // Construcción del payload completo
+      const payload = {
+        event:     'ViewContent',
+        timestamp: new Date().toISOString(),
+        _fbc:      cookies._fbc || null,
+        _fbp:      cookies._fbp || null,
+        fbclid,
+        id
+      };
+
+      // Envío al API
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(r => r.json())
+      .then(console.log)
+      .catch(console.error);
+
+      // Selecciona número al azar y redirige a WhatsApp
+      const number = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
+      const texto  = `${mensajeBase} Mi código es: ${id}`;
+      window.location.href = `https://wa.me/${number}?text=${encodeURIComponent(texto)}`;
+    });
+  </script>
+</body>
+</html>
