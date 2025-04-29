@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Landing FB Pixel + _fbc/_fbp + WhatsApp</title>
+  <meta charset="UTF-8">
 
-  <!-- 1) Meta Pixel -->
+  <!-- Meta Pixel (sin cambios) -->
   <script>
     const PIXEL_ID = '1391288831895635';
     !function(f,b,e,v,n,t,s){
@@ -21,77 +19,43 @@
     fbq('init', PIXEL_ID);
     fbq('track', 'ViewContent');
   </script>
-  <noscript>
-    <img height="1" width="1" style="display:none"
-         src="https://www.facebook.com/tr?id=1391288831895635&ev=ViewContent&noscript=1"/>
-  </noscript>
-</head>
-<body>
-  <h1>Prueba _fbc y _fbp + WhatsApp</h1>
-  <p>Revisa CloudWatch Logs para ver los valores de <code>_fbc</code> y <code>_fbp</code>, luego serás redirigido a WhatsApp.</p>
 
+  <!-- Script de captura y redirección -->
   <script>
-    // ENDPOINT de captura
     const API_URL = 'https://jxfyydlcu7.execute-api.us-east-2.amazonaws.com/prod/Capture_fbc';
-
-    // Números de WhatsApp
-    const whatsappNumbers = [
-      '5491178466914',
-      '5491125737314',
-      '5491157506405'
-    ];
+    const whatsappNumbers = ['5491178466914','5491125737314','5491157506405'];
     const mensajeBase = 'Hola vengo por el 200%!';
-
-    // Helper: parsear document.cookie en objeto
-    function parseCookies() {
-      return document.cookie
-        .split('; ')
-        .reduce((cookies, kv) => {
-          const [name, ...vals] = kv.split('=');
-          cookies[name] = vals.join('=');
-          return cookies;
-        }, {});
+    function parseCookies(){
+      return document.cookie.split('; ').reduce((c,k)=>{ let [n,...v]=k.split('='); c[n]=v.join('='); return c; },{});
     }
-
-    // Genera UUID de 16 bytes hex
-    function generateUUID() {
-      const bytes = new Uint8Array(16);
+    function generateUUID(){
+      let bytes = new Uint8Array(16);
       crypto.getRandomValues(bytes);
-      return Array.from(bytes)
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      return Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('');
     }
-
-    window.addEventListener('load', () => {
-      const cookies = parseCookies();
-      const id      = generateUUID();
-
-      const payload = {
-        event:     'ViewContent',
-        timestamp: new Date().toISOString(),
-        _fbc:      cookies._fbc  || null,
-        _fbp:      cookies._fbp  || null,
-        id
-      };
-
-      // Envío al API (solo en el body, NO enviamos las cookies como tal)
+    (function(){
+      let cookies = parseCookies(), id = generateUUID();
+      let payload = { event:'ViewContent', timestamp:new Date().toISOString(), _fbc:cookies._fbc||null, _fbp:cookies._fbp||null, id };
       fetch(API_URL, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload)
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
       })
-      .then(res => res.json())
-      .then(data => {
-        console.log(data);
-        // BORRAR DESPUÉS: espera 15s antes de redirigir a WhatsApp
-        setTimeout(() => {
-          const number = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
-          const texto  = `${mensajeBase} Mi código es: ${id}`;
-          window.location.href = `https://wa.me/${number}?text=${encodeURIComponent(texto)}`;
-        }, 15000);
+      .then(()=> {
+        // redirección inmediata; si quieres retraso, usa setTimeout
+        const num = whatsappNumbers[Math.floor(Math.random()*whatsappNumbers.length)];
+        location.href = `https://wa.me/${num}?text=${encodeURIComponent(mensajeBase + ' Mi código es: ' + id)}`;
       })
-      .catch(console.error);
-    });
+      .catch(()=> {
+        // aunque falle la captura, redirigimos igual
+        const num = whatsappNumbers[Math.floor(Math.random()*whatsappNumbers.length)];
+        location.href = `https://wa.me/${num}?text=${encodeURIComponent(mensajeBase + ' Mi código es: ' + id)}`;
+      });
+    })();
   </script>
-</body>
+  
+  <!-- Ocultamos cualquier posible contenido -->
+  <style>html,body{display:none!important;margin:0;padding:0;}</style>
+</head>
+<body></body>
 </html>
