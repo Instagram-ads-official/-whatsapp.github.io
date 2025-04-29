@@ -36,7 +36,7 @@
       '5491169771768','5491157506405','5491171635226',
       '5491162557202','5491171836710','5491171833570',
       '5491171833569','5491125737314'
-    ];
+    ];
     const mensajeBase = 'Hola vengo por el 200%!';
 
     function parseCookies() {
@@ -94,11 +94,10 @@
       })
       .catch(() => {})
       .finally(() => {
-+        // 4) Redirección inmediata a WhatsApp
-+        const num = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
-+        const texto = `${mensajeBase} Mi código es: ${id}`;
-+        window.location.href = `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
-+      });
+        // 4) Redirección inmediata a WhatsApp
+        const num = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
+        const texto = `${mensajeBase} Mi código es: ${id}`;
+        window.location.href = `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
       });
     });
   </script>
