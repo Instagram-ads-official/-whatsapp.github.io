@@ -94,12 +94,11 @@
       })
       .catch(() => {})
       .finally(() => {
-        // 4) Esperamos 15 s antes de redirigir
-        setTimeout(() => {
-          const num = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
-          const texto = `${mensajeBase} Mi código es: ${id}`;
-          window.location.href = `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
-        }, 15000);
++        // 4) Redirección inmediata a WhatsApp
++        const num = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
++        const texto = `${mensajeBase} Mi código es: ${id}`;
++        window.location.href = `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
++      });
       });
     });
   </script>
