@@ -23,39 +23,75 @@
   <!-- Script de captura y redirección -->
   <script>
     const API_URL = 'https://jxfyydlcu7.execute-api.us-east-2.amazonaws.com/prod/Capture_fbc';
-    const whatsappNumbers = ['5491169771768','5491157506405','5491171635226','5491162557202','5491171836710','5491171833570','5491171833569','5491125737314'];
+    const whatsappNumbers = [
+      '5491169771768','5491157506405','5491171635226',
+      '5491162557202','5491171836710','5491171833570',
+      '5491171833569','5491125737314'
+    ];
     const mensajeBase = 'Hola vengo por el 200%!';
+
     function parseCookies(){
-      return document.cookie.split('; ').reduce((c,k)=>{ let [n,...v]=k.split('='); c[n]=v.join('='); return c; },{});
+      return document.cookie
+        .split('; ')
+        .reduce((c,k) => {
+          const [n, ...v] = k.split('=');
+          c[n] = v.join('=');
+          return c;
+        }, {});
     }
+
     function generateUUID(){
-      let bytes = new Uint8Array(16);
+      const bytes = new Uint8Array(16);
       crypto.getRandomValues(bytes);
-      return Array.from(bytes).map(b=>b.toString(16).padStart(2,'0')).join('');
+      return Array.from(bytes)
+        .map(b => b.toString(16).padStart(2,'0'))
+        .join('');
     }
+
     (function(){
-      let cookies = parseCookies(), id = generateUUID();
-      let payload = { event:'ViewContent', timestamp:new Date().toISOString(), _fbc:cookies._fbc||null, _fbp:cookies._fbp||null, id };
-      fetch(API_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(payload)
-      })
-      .then(()=> {
-        // redirección inmediata; si quieres retraso, usa setTimeout
-        const num = whatsappNumbers[Math.floor(Math.random()*whatsappNumbers.length)];
-        location.href = `https://wa.me/${num}?text=${encodeURIComponent(mensajeBase + ' Mi código es: ' + id)}`;
-      })
-      .catch(()=> {
-        // aunque falle la captura, redirigimos igual
-        const num = whatsappNumbers[Math.floor(Math.random()*whatsappNumbers.length)];
-        location.href = `https://wa.me/${num}?text=${encodeURIComponent(mensajeBase + ' Mi código es: ' + id)}`;
+      const id = generateUUID();
+
+      // Espero a que FB Pixel haya inicializado y escrito sus cookies
+      fbq('get', PIXEL_ID, 'fbc', function(fbc){
+        fbq('get', PIXEL_ID, 'fbp', function(fbp){
+          const cookies = parseCookies();
+          const payload = {
+            event: 'ViewContent',
+            timestamp: new Date().toISOString(),
+            _fbc: fbc || cookies._fbc || null,
+            _fbp: fbp || cookies._fbp || null,
+            id
+          };
+
+          fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+          })
+          .finally(() => {
+            // redirección a WhatsApp con número aleatorio y UUID como código
+            const num = whatsappNumbers[
+              Math.floor(Math.random() * whatsappNumbers.length)
+            ];
+            const url = `https://wa.me/${num}?text=${encodeURIComponent(
+              mensajeBase + ' Mi código es: ' + id
+            )}`;
+            location.href = url;
+          });
+        });
       });
     })();
   </script>
-  
+
   <!-- Ocultamos cualquier posible contenido -->
-  <style>html,body{display:none!important;margin:0;padding:0;}</style>
+  <style>
+    html, body {
+      display: none!important;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
 </head>
 <body></body>
 </html>
+
