@@ -86,20 +86,22 @@
         id
       };
 
-      // 3) Enviamos al API, y al terminar redirigimos INMEDIATAMENTE
+      // 3) Enviamos al API
       fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      .catch(() => {})  // aunque falle, igual seguimos
+      .catch(() => {})
       .finally(() => {
-        const num = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
-        const texto = `${mensajeBase} Mi código es: ${id}`;
-        window.location.href = `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
+        // 4) Esperamos 15 s antes de redirigir
+        setTimeout(() => {
+          const num = whatsappNumbers[Math.floor(Math.random() * whatsappNumbers.length)];
+          const texto = `${mensajeBase} Mi código es: ${id}`;
+          window.location.href = `https://wa.me/${num}?text=${encodeURIComponent(texto)}`;
+        }, 15000);
       });
     });
   </script>
 </body>
 </html>
-
